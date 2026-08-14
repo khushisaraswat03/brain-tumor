@@ -1,0 +1,29 @@
+# Dataset (multi-GB, registration-restricted — use the Kaggle mirror, never re-upload)
+dataset/
+
+# Large processed arrays and legacy notebook outputs
+*.npy
+
+# Model checkpoints (large binaries — do NOT commit)
+checkpoints/
+*.pt
+*.pth
+
+# Predictions / logs
+predictions/
+logs/
+*.log
+
+# Generated ablation configs are reproducible from the generator
+configs/generated/
+
+# Python / env
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+venv/
+tf_env/
+torch_env/
+
+# NOTE: results/ is intentionally NOT ignored — small results_*.json files are the
+# evidence trail for the paper's tables and MUST be committed.

@@ -1,0 +1,10 @@
+# Core deep learning (on Kaggle these are preinstalled; pinned loosely for local use).
+# For the old 457.34 driver, use the cu111 fallback instead:
+#   pip install torch==1.10.1+cu111 --index-url https://download.pytorch.org/whl/cu111
+torch>=1.10
+numpy>=1.21
+nibabel>=3.2
+scipy>=1.7
+PyYAML>=5.4
+tqdm>=4.60
+scikit-image>=0.19   # used by HD95 (surface distance) and elastic deform helpers

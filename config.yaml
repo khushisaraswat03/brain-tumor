@@ -1,0 +1,53 @@
+# ==========================================================================
+# Single source of truth for ONE experiment run.
+# Switch ablation arms by changing data.norm_strategy / augmentation.* , or by
+# pointing --config at a generated file in configs/generated/.
+#
+# Defaults below are tuned DOWN for a 4GB GTX 1650 (see README "4GB" section).
+# On Kaggle T4/P100 (15GB+) scale up: patch_size 128^3, base_channels 16-32,
+# depth 4, batch_size 2 — just record which setting each experiment used.
+# ==========================================================================
+
+experiment_name: baseline
+seed: 42
+device: cuda # falls back to cpu automatically if cuda is unavailable
+checkpoint_dir: checkpoints
+
+data:
+  # On Kaggle this becomes something like:
+  #   /kaggle/input/brats20-dataset-training-validation/BraTS2020_TrainingData/MICCAI_BraTS2020_TrainingData
+  root_dir: dataset/BraTs2020/BraTS2020_TrainingData/MICCAI_BraTS2020_TrainingData
+  val_frac: 0.15
+  norm_strategy: hybrid_percentile_zscore # ablation axis 1
+  patch_size: [96, 96, 96] # 4GB-safe; 128^3 on a bigger GPU
+  # max_patients: 4     # uncomment for a fast smoke test on a tiny subset
+
+model:
+  in_channels: 4 # FLAIR, T1, T1ce, T2
+  num_classes: 4 # bg, NCR/NET, edema, enhancing
+  base_channels: 8 # 16-32 on a bigger GPU
+  depth: 3 # 4 on a bigger GPU
+
+loss:
+  dice_weight: 1.0
+  ce_weight: 1.0
+  include_background: false # exclude bg from Dice mean (severe imbalance)
+
+augmentation: # ablation axis 2
+  enabled: true
+  spatial: true # flips, rot90, elastic deformation
+  intensity: true # gamma, bias field, noise, blur
+  batch_mixer: tumor_aware_cutmix # none | mixup | cutmix | tumor_aware_cutmix
+
+train:
+  epochs: 100
+  batch_size: 1 # 4GB realistically fits 1 at 96^3
+  accumulate_grad_batches: 8 # effective batch size ~8
+  num_workers: 2
+  lr: 0.001
+  weight_decay: 0.00001
+  amp: true # mixed precision (cuda only)
+  early_stop_patience: 20
+
+eval:
+  overlap: 0.5 # sliding-window overlap fraction
