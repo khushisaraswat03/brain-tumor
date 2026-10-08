@@ -56,7 +56,7 @@ If `cuda.is_available()` is `False`, training silently runs on CPU (50-100x
 slower) — not practical. Do local **debugging** on CPU/small subset; run real
 training on Kaggle.
 
-## Recommended workflow (laptop + Kaggle + GitHub)
+## Recommended workflow (laptop + Kaggle +  GitHub)
 
 | Tool       | Role                                                              |
 | ---------- | ----------------------------------------------------------------- |
