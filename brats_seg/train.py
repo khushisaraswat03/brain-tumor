@@ -76,9 +76,12 @@ def train(cfg_path, resume=False, max_hours=None):
     if cfg.data.get("max_patients"):
         patients = patients[: cfg.data.max_patients]
     train_ids, val_ids = split_patients(
-        patients, val_frac=cfg.data.get("val_frac", 0.15), seed=seed
+        patients, val_frac=cfg.data.get("val_frac", 0.15),
+        seed=cfg.data.get("split_seed", 42)
     )
-    print(f"  patients: {len(patients)} (train={len(train_ids)}, val={len(val_ids)})")
+    import hashlib as _h
+    _fp = _h.md5("|".join(sorted(val_ids)).encode()).hexdigest()[:8]
+    print(f"  patients: {len(patients)} (train={len(train_ids)}, val={len(val_ids)}) split_seed={cfg.data.get('split_seed', 42)} fingerprint={_fp}")
 
     norm = cfg.data.get("norm_strategy", "hybrid_percentile_zscore")
     patch = tuple(cfg.data.get("patch_size", [96, 96, 96]))

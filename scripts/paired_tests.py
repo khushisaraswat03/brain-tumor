@@ -22,8 +22,19 @@ COMPARISONS = [
         ("aug_spatial_intensity", "aug_full_with_tumor_cutmix"),
         ("aug_soft_cutmix_25ep", "aug_full_with_tumor_cutmix"),
     ]),
-    ("Budget study (100 ep)", [
+    ("Augmentation axis (100 ep, percentile_clip)", [
+        ("final_spatial_intensity_100ep", "final_no_aug_100ep"),
+        ("final_spatial_intensity_100ep", "final_soft_cutmix_100ep"),
+        ("final_spatial_intensity_100ep", "final_cutmix_100ep"),
+        ("final_no_aug_100ep", "final_soft_cutmix_100ep"),
         ("final_no_aug_100ep", "final_cutmix_100ep"),
+        ("final_soft_cutmix_100ep", "final_cutmix_100ep"),
+    ]),
+    ("Budget effect (100 ep vs 25 ep, same configuration)", [
+        ("final_no_aug_100ep", "aug_no_aug"),
+        ("final_spatial_intensity_100ep", "aug_spatial_intensity"),
+        ("final_soft_cutmix_100ep", "aug_soft_cutmix_25ep"),
+        ("final_cutmix_100ep", "aug_full_with_tumor_cutmix"),
     ]),
 ]
 
@@ -35,11 +46,20 @@ def cases(exp, region, metric):
 
 def test(a_name, b_name, region, metric):
     a, b = cases(a_name, region, metric), cases(b_name, region, metric)
+    # HD95 is undefined when either surface is empty (no enhancing tumour in the
+    # ground truth, or an arm predicting none). Drop those pairs and report n.
+    keep = ~(np.isnan(a) | np.isnan(b))
+    n_drop = int((~keep).sum())
+    a, b = a[keep], b[keep]
     d = a - b
+    if len(a) == 0 or np.allclose(d, 0):
+        return (f"| {a_name} vs {b_name} | {a.mean() if len(a) else float('nan'):.4f} | "
+                f"{b.mean() if len(b) else float('nan'):.4f} | — | — | — | — | no variation |")
     stat, p = wilcoxon(a, b)
     star = "***" if p < 0.001 else "**" if p < 0.01 else "*" if p < 0.05 else "ns"
+    note = f" (n={len(a)}, {n_drop} undefined dropped)" if n_drop else ""
     return (f"| {a_name} vs {b_name} | {a.mean():.4f} | {b.mean():.4f} | "
-            f"{d.mean():+.4f} | {(d > 0).sum()}/{len(a)} | {stat:.1f} | {p:.4g} | {star} |")
+            f"{d.mean():+.4f} | {(d > 0).sum()}/{len(a)} | {stat:.1f} | {p:.4g} | {star}{note} |")
 
 def main():
     ap = argparse.ArgumentParser()
@@ -55,6 +75,11 @@ def main():
         print("| Comparison | mean A | mean B | diff | wins | W | p | |")
         print("|---|---|---|---|---|---|---|---|")
         for a, b in pairs:
+            missing = [e for e in (a, b) if not os.path.exists(
+                os.path.join(RESULTS, f"results_{e}_val.json"))]
+            if missing:
+                print(f"| {a} vs {b} | — | — | — | — | — | — | missing: {', '.join(missing)} |")
+                continue
             print(test(a, b, args.region, args.metric))
     print("\n*** p<0.001  ** p<0.01  * p<0.05  ns = not significant")
 

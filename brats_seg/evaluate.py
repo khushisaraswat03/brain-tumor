@@ -72,7 +72,8 @@ def evaluate(cfg_path, checkpoint, split="val"):
     if cfg.data.get("max_patients"):
         patients = patients[: cfg.data.max_patients]
     train_ids, val_ids = split_patients(
-        patients, val_frac=cfg.data.get("val_frac", 0.15), seed=seed
+        patients, val_frac=cfg.data.get("val_frac", 0.15),
+        seed=cfg.data.get("split_seed", 42)
     )
     ids = val_ids if split == "val" else train_ids
 

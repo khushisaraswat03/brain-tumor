@@ -1,0 +1,38 @@
+experiment_name: final_spatial_intensity_100ep_seed44
+seed: 44
+device: cuda
+checkpoint_dir: checkpoints
+data:
+  root_dir: dataset/BraTs2020/BraTS2020_TrainingData/MICCAI_BraTS2020_TrainingData
+  val_frac: 0.15
+  split_seed: 42
+  norm_strategy: percentile_clip
+  patch_size:
+  - 96
+  - 96
+  - 96
+model:
+  in_channels: 4
+  num_classes: 4
+  base_channels: 8
+  depth: 3
+loss:
+  dice_weight: 1.0
+  ce_weight: 1.0
+  include_background: false
+augmentation:
+  enabled: true
+  spatial: true
+  intensity: true
+  batch_mixer: none
+train:
+  epochs: 100
+  batch_size: 1
+  accumulate_grad_batches: 8
+  num_workers: 2
+  lr: 0.001
+  weight_decay: 1.0e-05
+  amp: true
+  early_stop_patience: 20
+eval:
+  overlap: 0.5
